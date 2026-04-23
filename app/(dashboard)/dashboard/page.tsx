@@ -55,7 +55,10 @@ export default async function DashboardPage() {
     db.retirementSetting.findUnique({ where: { userId: session.user.id } }),
     db.trip.findMany({ where: { userId: session.user.id }, orderBy: { createdAt: "desc" } }),
     db.mapPin.count({ where: { userId: session.user.id } }),
-    db.budget.findMany({ where: { userId: session.user.id } }),
+    db.budget.findMany({
+      where: { userId: session.user.id },
+      select: { type: true, amount: true, year: true, month: true },
+    }),
   ]);
 
   let retirementProgress = 0, yearsToRetirement = 0, requiredFund = 0, projectedFund = 0, shortfall = 0;
@@ -95,14 +98,31 @@ export default async function DashboardPage() {
     <div className="p-4 sm:p-6 lg:p-8 max-w-5xl space-y-6 lg:space-y-8">
 
       {/* ── Header ── */}
-      <div>
-        <p className="text-sm text-slate-400 font-medium">{greeting}</p>
-        <h1 className="text-2xl font-bold text-slate-900 mt-0.5 tracking-tight">
-          {session.user?.name || session.user?.email}
-        </h1>
-        <p className="text-slate-400 text-sm mt-1">
-          {MONTH_NAMES[now.getMonth()]} {now.getFullYear()}
-        </p>
+      <div className="relative bg-gradient-to-br from-indigo-600 via-indigo-700 to-violet-700 rounded-2xl px-6 py-5 text-white overflow-hidden shadow-lg shadow-indigo-500/20">
+        <div className="absolute -top-10 -right-10 w-56 h-56 bg-white/5 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute -bottom-8 -left-8 w-40 h-40 bg-violet-400/10 rounded-full blur-2xl pointer-events-none" />
+        <div className="absolute inset-0 opacity-[0.03] pointer-events-none"
+          style={{ backgroundImage: "radial-gradient(circle, #ffffff 1px, transparent 1px)", backgroundSize: "20px 20px" }} />
+        <div className="relative flex items-start justify-between gap-4">
+          <div>
+            <div className="inline-flex items-center gap-1.5 mb-2">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+              <span className="text-indigo-200 text-xs font-medium tracking-wide">{greeting}</span>
+            </div>
+            <h1 className="text-xl font-bold tracking-tight">
+              {session.user?.name || session.user?.email}
+            </h1>
+            <p className="text-indigo-300/80 text-sm mt-0.5">
+              {MONTH_NAMES[now.getMonth()]} {now.getFullYear()}
+            </p>
+          </div>
+          <div className="hidden sm:flex shrink-0 w-11 h-11 rounded-2xl bg-white/15 border border-white/20 items-center justify-center">
+            <svg className="w-5 h-5 text-indigo-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8}
+                d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 16l4.553-2.276A1 1 0 0021 19.382V8.618a1 1 0 00-.553-.894L15 5m0 18V5m0 0L9 7" />
+            </svg>
+          </div>
+        </div>
       </div>
 
       {/* ── Top stats ── */}
@@ -118,8 +138,8 @@ export default async function DashboardPage() {
                   d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
               </svg>
             ),
-            iconBg: "bg-indigo-50 text-indigo-500",
-            valueCls: retirementProgress >= 80 ? "text-emerald-600" : retirementProgress >= 50 ? "text-amber-600" : "text-rose-500",
+            gradient: "from-indigo-500 to-violet-600",
+            shadow: "shadow-indigo-500/30",
           },
           {
             label: "เหลืออีกกี่ปี",
@@ -131,8 +151,8 @@ export default async function DashboardPage() {
                   d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             ),
-            iconBg: "bg-violet-50 text-violet-500",
-            valueCls: "text-slate-800",
+            gradient: "from-violet-500 to-purple-600",
+            shadow: "shadow-violet-500/30",
           },
           {
             label: "ทริปที่วางแผน",
@@ -144,8 +164,8 @@ export default async function DashboardPage() {
                   d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             ),
-            iconBg: "bg-sky-50 text-sky-500",
-            valueCls: "text-slate-800",
+            gradient: "from-sky-500 to-blue-600",
+            shadow: "shadow-sky-500/30",
           },
           {
             label: "หมุดแผนที่",
@@ -157,17 +177,21 @@ export default async function DashboardPage() {
                   d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0zM15 11a3 3 0 11-6 0 3 3 0 016 0z" />
               </svg>
             ),
-            iconBg: "bg-emerald-50 text-emerald-500",
-            valueCls: "text-slate-800",
+            gradient: "from-emerald-500 to-teal-600",
+            shadow: "shadow-emerald-500/30",
           },
         ].map(card => (
-          <div key={card.label} className="bg-white rounded-2xl border border-slate-100 shadow-sm p-5 hover:shadow-md transition-shadow">
-            <div className={`w-9 h-9 rounded-xl ${card.iconBg} flex items-center justify-center mb-4`}>
-              {card.icon}
+          <div key={card.label} className={`relative rounded-2xl p-5 bg-gradient-to-br ${card.gradient} text-white shadow-lg ${card.shadow} hover:shadow-xl hover:-translate-y-1 transition-all overflow-hidden`}>
+            <div className="absolute -top-6 -right-6 w-24 h-24 bg-white/10 rounded-full blur-2xl pointer-events-none" />
+            <div className="absolute bottom-0 left-0 w-16 h-16 bg-black/5 rounded-full blur-xl pointer-events-none" />
+            <div className="relative">
+              <div className="w-9 h-9 rounded-xl bg-white/20 flex items-center justify-center mb-4">
+                {card.icon}
+              </div>
+              <p className="text-xs font-medium text-white/70 uppercase tracking-wide leading-none">{card.label}</p>
+              <p className="text-2xl font-bold text-white mt-2 leading-none">{card.value}</p>
+              <p className="text-xs text-white/60 mt-1.5">{card.sub}</p>
             </div>
-            <p className="text-xs font-medium text-slate-500 uppercase tracking-wide leading-none">{card.label}</p>
-            <p className={`text-2xl font-bold mt-2 leading-none ${card.valueCls}`}>{card.value}</p>
-            <p className="text-xs text-slate-400 mt-1.5">{card.sub}</p>
           </div>
         ))}
       </div>
@@ -177,7 +201,7 @@ export default async function DashboardPage() {
 
         {/* Retirement card */}
         <Link href="/retirement"
-          className="group bg-white rounded-2xl border border-slate-100 shadow-sm p-6 hover:border-indigo-200 hover:shadow-md transition-all space-y-5">
+          className="group bg-white rounded-2xl border border-slate-100 shadow-sm p-6 hover:border-indigo-200 hover:shadow-lg hover:-translate-y-0.5 transition-all space-y-5">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">แผนเกษียณ</p>
@@ -240,7 +264,7 @@ export default async function DashboardPage() {
 
         {/* Travel card */}
         <Link href="/trips"
-          className="group bg-white rounded-2xl border border-slate-100 shadow-sm p-6 hover:border-violet-200 hover:shadow-md transition-all space-y-4">
+          className="group bg-white rounded-2xl border border-slate-100 shadow-sm p-6 hover:border-violet-200 hover:shadow-lg hover:-translate-y-0.5 transition-all space-y-4">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">แผนเดินทาง</p>
@@ -294,7 +318,7 @@ export default async function DashboardPage() {
 
       {/* ── Map shortcut ── */}
       <Link href="/map"
-        className="group flex items-center justify-between bg-white rounded-2xl border border-slate-100 shadow-sm px-6 py-4 hover:border-emerald-200 hover:shadow-md transition-all">
+        className="group flex items-center justify-between bg-white rounded-2xl border border-slate-100 shadow-sm px-6 py-4 hover:border-emerald-200 hover:shadow-lg hover:-translate-y-0.5 transition-all">
         <div className="flex items-center gap-4">
           <div className="w-10 h-10 rounded-xl bg-emerald-50 group-hover:bg-emerald-100 text-emerald-500 flex items-center justify-center transition">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

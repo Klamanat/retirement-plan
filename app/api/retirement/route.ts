@@ -6,22 +6,30 @@ export async function GET() {
   const session = await auth();
   if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const setting = await db.retirementSetting.findUnique({
-    where: { userId: session.user.id },
-  });
+  // Run setting lookup + two groupBy aggregations in parallel — avoids full table scan
+  const [setting, incomeByMonth, expenseByMonth] = await Promise.all([
+    db.retirementSetting.findUnique({ where: { userId: session.user.id } }),
+    db.budget.groupBy({
+      by: ["year", "month"],
+      where: { userId: session.user.id, type: "income" },
+      _sum: { amount: true },
+    }),
+    db.budget.groupBy({
+      by: ["year", "month"],
+      where: { userId: session.user.id, type: "expense" },
+      _sum: { amount: true },
+    }),
+  ]);
 
-  // Also return budget averages for auto-fill
-  const budgets = await db.budget.findMany({
-    where: { userId: session.user.id },
-  });
+  const avgMonthlyIncome =
+    incomeByMonth.length > 0
+      ? incomeByMonth.reduce((s, b) => s + (b._sum.amount ?? 0), 0) / incomeByMonth.length
+      : 0;
 
-  const incomeMonths  = new Set(budgets.filter(b => b.type === "income").map(b => `${b.year}-${b.month}`));
-  const expenseMonths = new Set(budgets.filter(b => b.type === "expense").map(b => `${b.year}-${b.month}`));
-  const totalIncome   = budgets.filter(b => b.type === "income").reduce((s, b) => s + b.amount, 0);
-  const totalExpense  = budgets.filter(b => b.type === "expense").reduce((s, b) => s + b.amount, 0);
-
-  const avgMonthlyIncome  = incomeMonths.size  > 0 ? totalIncome  / incomeMonths.size  : 0;
-  const avgMonthlyExpense = expenseMonths.size > 0 ? totalExpense / expenseMonths.size : 0;
+  const avgMonthlyExpense =
+    expenseByMonth.length > 0
+      ? expenseByMonth.reduce((s, b) => s + (b._sum.amount ?? 0), 0) / expenseByMonth.length
+      : 0;
 
   return NextResponse.json({
     setting,

@@ -54,14 +54,12 @@ export async function DELETE(req: NextRequest) {
     return NextResponse.json({ error: "ID required" }, { status: 400 });
   }
 
-  const pin = await db.mapPin.findFirst({
-    where: { id, userId: session.user.id },
-  });
+  // Single query: delete only if owned by current user
+  const deleted = await db.mapPin.deleteMany({ where: { id, userId: session.user.id } });
 
-  if (!pin) {
+  if (deleted.count === 0) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
-  await db.mapPin.delete({ where: { id } });
   return NextResponse.json({ success: true });
 }

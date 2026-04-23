@@ -46,6 +46,10 @@ model Budget {
   type      String
   createdAt DateTime @default(now())
   user      User     @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([userId, type])
+  @@index([userId, year])
 }
 
 model MapPin {
@@ -57,6 +61,8 @@ model MapPin {
   note      String?
   createdAt DateTime @default(now())
   user      User     @relation(fields: [userId], references: [id])
+
+  @@index([userId])
 }
 
 model Trip {
@@ -72,4 +78,7 @@ model Trip {
   note        String?
   createdAt   DateTime  @default(now())
   user        User      @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([userId, status])
 }

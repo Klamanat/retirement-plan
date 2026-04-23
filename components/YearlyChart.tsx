@@ -23,15 +23,20 @@ interface Props {
 }
 
 export default function YearlyChart({ budgets }: Props) {
+  // Single-pass O(n) accumulator — avoids 24 filter+reduce iterations
+  const monthlyMap = budgets.reduce<Record<number, { income: number; expense: number }>>(
+    (acc, b) => {
+      if (!acc[b.month]) acc[b.month] = { income: 0, expense: 0 };
+      if (b.type === "income") acc[b.month].income += b.amount;
+      else acc[b.month].expense += b.amount;
+      return acc;
+    },
+    {}
+  );
+
   const data = Array.from({ length: 12 }, (_, i) => {
-    const month = i + 1;
-    const income = budgets
-      .filter((b) => b.month === month && b.type === "income")
-      .reduce((sum, b) => sum + b.amount, 0);
-    const expense = budgets
-      .filter((b) => b.month === month && b.type === "expense")
-      .reduce((sum, b) => sum + b.amount, 0);
-    return { name: MONTHS[i], income, expense };
+    const m = monthlyMap[i + 1] ?? { income: 0, expense: 0 };
+    return { name: MONTHS[i], income: m.income, expense: m.expense };
   });
 
   return (

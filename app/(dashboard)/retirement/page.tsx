@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, memo } from "react";
 import { calculateRetirement } from "@/lib/retirementCalc";
 
 const fmt  = (n: number) => new Intl.NumberFormat("th-TH", { maximumFractionDigits: 0 }).format(n);
@@ -8,7 +8,7 @@ const fmtM = (n: number) => new Intl.NumberFormat("th-TH", { maximumFractionDigi
 
 // ── sub-components ────────────────────────────────────────────────────────────
 
-function SliderField({
+const SliderField = memo(function SliderField({
   label, value, onChange, min, max, step = 1, unit, sublabel,
 }: {
   label: string; value: number; onChange: (v: number) => void;
@@ -26,7 +26,7 @@ function SliderField({
       {sublabel && <p className="text-[10px] text-slate-400">{sublabel}</p>}
     </div>
   );
-}
+});
 
 function Arrow() {
   return (
@@ -139,17 +139,41 @@ export default function RetirementPage() {
     <div className="p-4 sm:p-6 lg:p-8 max-w-5xl space-y-6 lg:space-y-8">
 
       {/* Header */}
-      <div className="flex items-start justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900">แผนเกษียณ</h1>
-          <p className="text-slate-400 text-sm mt-0.5">
-            คำนวณจาก <span className="text-indigo-500 font-medium">ค่าใช้จ่าย</span> ไปหา <span className="text-indigo-500 font-medium">ยอดเงินเป้าหมาย</span>
-          </p>
+      <div className="relative bg-gradient-to-br from-indigo-600 via-indigo-700 to-violet-700 rounded-2xl px-6 py-5 text-white overflow-hidden shadow-lg shadow-indigo-500/20">
+        <div className="absolute -top-10 -right-10 w-56 h-56 bg-white/5 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute inset-0 opacity-[0.03] pointer-events-none"
+          style={{ backgroundImage: "radial-gradient(circle, #ffffff 1px, transparent 1px)", backgroundSize: "20px 20px" }} />
+        <div className="relative flex items-center justify-between gap-4">
+          <div>
+            <div className="inline-flex items-center gap-1.5 mb-2">
+              <svg className="w-3.5 h-3.5 text-indigo-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8}
+                  d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+              </svg>
+              <span className="text-indigo-200 text-xs font-medium tracking-wide">แผนเกษียณ</span>
+            </div>
+            <h1 className="text-xl font-bold tracking-tight">วางแผนการเงินเพื่อเกษียณ</h1>
+            <p className="text-indigo-300/80 text-xs mt-0.5">คำนวณจากค่าใช้จ่าย → ยอดเงินเป้าหมาย</p>
+          </div>
+          <button onClick={handleSave} disabled={saving}
+            className="shrink-0 flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition disabled:opacity-50 bg-white text-indigo-700 hover:bg-indigo-50 shadow-lg">
+            {saved ? (
+              <>
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                </svg>
+                บันทึกแล้ว
+              </>
+            ) : saving ? "..." : (
+              <>
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
+                </svg>
+                บันทึก
+              </>
+            )}
+          </button>
         </div>
-        <button onClick={handleSave} disabled={saving}
-          className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-medium rounded-xl shadow-sm transition disabled:opacity-60">
-          {saved ? "✓ บันทึกแล้ว" : saving ? "..." : "บันทึก"}
-        </button>
       </div>
 
       <div className="grid lg:grid-cols-[1fr_360px] gap-5 lg:gap-8 items-start">
@@ -159,8 +183,8 @@ export default function RetirementPage() {
 
           {/* ── STEP 1: ค่าใช้จ่าย ── */}
           <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-            <div className="px-5 py-3 bg-rose-50 border-b border-rose-100 flex items-center gap-2">
-              <span className="w-5 h-5 rounded-full bg-rose-500 text-white text-xs flex items-center justify-center font-bold shrink-0">1</span>
+            <div className="px-5 py-3.5 bg-gradient-to-r from-rose-50 to-pink-50 border-b border-rose-100/60 flex items-center gap-2.5">
+              <span className="w-6 h-6 rounded-lg bg-gradient-to-br from-rose-500 to-pink-600 text-white text-xs flex items-center justify-center font-bold shrink-0 shadow-sm shadow-rose-500/25">1</span>
               <p className="text-sm font-semibold text-rose-800">ค่าใช้จ่ายหลังเกษียณ</p>
             </div>
             <div className="p-5 space-y-4">
@@ -214,8 +238,8 @@ export default function RetirementPage() {
 
           {/* ── STEP 2: ยอดเงินเป้าหมาย ── */}
           <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-            <div className="px-5 py-3 bg-indigo-50 border-b border-indigo-100 flex items-center gap-2">
-              <span className="w-5 h-5 rounded-full bg-indigo-600 text-white text-xs flex items-center justify-center font-bold shrink-0">2</span>
+            <div className="px-5 py-3.5 bg-gradient-to-r from-indigo-50 to-violet-50 border-b border-indigo-100/60 flex items-center gap-2.5">
+              <span className="w-6 h-6 rounded-lg bg-gradient-to-br from-indigo-500 to-violet-600 text-white text-xs flex items-center justify-center font-bold shrink-0 shadow-sm shadow-indigo-500/25">2</span>
               <p className="text-sm font-semibold text-indigo-800">ยอดเงินที่ต้องมีตอนเกษียณ</p>
             </div>
             <div className="p-5 space-y-4">
@@ -239,8 +263,8 @@ export default function RetirementPage() {
 
           {/* ── STEP 3: ช่องว่าง ── */}
           <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-            <div className="px-5 py-3 bg-emerald-50 border-b border-emerald-100 flex items-center gap-2">
-              <span className="w-5 h-5 rounded-full bg-emerald-600 text-white text-xs flex items-center justify-center font-bold shrink-0">3</span>
+            <div className="px-5 py-3.5 bg-gradient-to-r from-emerald-50 to-teal-50 border-b border-emerald-100/60 flex items-center gap-2.5">
+              <span className="w-6 h-6 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600 text-white text-xs flex items-center justify-center font-bold shrink-0 shadow-sm shadow-emerald-500/25">3</span>
               <p className="text-sm font-semibold text-emerald-800">ช่องว่างและแผนออม</p>
             </div>
             <div className="p-5 space-y-4">
@@ -250,8 +274,12 @@ export default function RetirementPage() {
                   <span>เงินที่คาดว่าจะมี</span>
                   <span className="font-medium text-slate-700">{fmtM(result.projectedFund)} ล้าน</span>
                 </div>
-                <div className="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden">
-                  <div className={`h-2.5 rounded-full transition-all duration-700 ${progressColor}`}
+                <div className="w-full bg-slate-100 rounded-full h-3 overflow-hidden">
+                  <div className={`h-3 rounded-full transition-all duration-700 bg-gradient-to-r ${
+                    result.progress >= 80 ? "from-emerald-400 to-teal-500" :
+                    result.progress >= 50 ? "from-amber-400 to-orange-400" :
+                    "from-rose-400 to-pink-500"
+                  }`}
                     style={{ width: `${Math.min(100, result.progress)}%` }} />
                 </div>
                 <div className="flex justify-between text-xs">
@@ -337,7 +365,10 @@ export default function RetirementPage() {
 
           {/* Ages */}
           <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-5 space-y-4">
-            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">ข้อมูลส่วนตัว</p>
+            <div className="flex items-center gap-2">
+              <div className="w-1 h-4 rounded-full bg-gradient-to-b from-indigo-500 to-violet-500" />
+              <p className="text-xs font-semibold text-slate-600 uppercase tracking-wide">ข้อมูลส่วนตัว</p>
+            </div>
             <SliderField label="อายุปัจจุบัน" value={currentAge} onChange={setCurrentAge}
               min={18} max={79} unit="ปี" />
             <SliderField label="อายุเกษียณ" value={retirementAge}
@@ -352,7 +383,10 @@ export default function RetirementPage() {
 
           {/* Savings */}
           <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-5 space-y-4">
-            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">เงินออมปัจจุบัน</p>
+            <div className="flex items-center gap-2">
+              <div className="w-1 h-4 rounded-full bg-gradient-to-b from-sky-500 to-blue-500" />
+              <p className="text-xs font-semibold text-slate-600 uppercase tracking-wide">เงินออมปัจจุบัน</p>
+            </div>
             <div className="space-y-1">
               <div className="flex justify-between">
                 <span className="text-xs font-medium text-slate-600">เงินออม/ลงทุนปัจจุบัน</span>
@@ -389,7 +423,10 @@ export default function RetirementPage() {
 
           {/* Assumptions */}
           <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-5 space-y-4">
-            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">สมมติฐาน</p>
+            <div className="flex items-center gap-2">
+              <div className="w-1 h-4 rounded-full bg-gradient-to-b from-amber-400 to-orange-500" />
+              <p className="text-xs font-semibold text-slate-600 uppercase tracking-wide">สมมติฐาน</p>
+            </div>
             <SliderField label="ผลตอบแทนการลงทุน" value={expectedReturn}
               onChange={setExpectedReturn} min={0} max={20} step={0.5} unit="%/ปี" />
             <SliderField label="อัตราเงินเฟ้อ" value={inflationRate}
@@ -401,7 +438,10 @@ export default function RetirementPage() {
 
           {/* Timeline */}
           <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-5">
-            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-4">ไทม์ไลน์</p>
+            <div className="flex items-center gap-2 mb-4">
+              <div className="w-1 h-4 rounded-full bg-gradient-to-b from-emerald-500 to-teal-500" />
+              <p className="text-xs font-semibold text-slate-600 uppercase tracking-wide">ไทม์ไลน์</p>
+            </div>
             <div className="space-y-0">
               {[
                 { label: "ปัจจุบัน", age: currentAge, sub: `ออม ${fmt(monthlySavings)} ฿/เดือน`, dot: "bg-slate-400" },

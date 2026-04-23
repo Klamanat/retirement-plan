@@ -36,7 +36,7 @@ function SidebarContent({ displayName, initials, onNavigate }: Props & { onNavig
       <SidebarNav onNavigate={onNavigate} />
 
       <div className="p-3 border-t border-white/5 mt-auto">
-        <div className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl">
+        <div className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl bg-white/5 border border-white/5 mb-1">
           <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-400 to-violet-500 flex items-center justify-center text-white text-xs font-bold shrink-0 shadow-sm">
             {initials}
           </div>
@@ -79,12 +79,13 @@ export default function SidebarShell({ displayName, initials }: Props) {
   return (
     <>
       {/* ── Desktop sidebar (always visible on lg+) ── */}
-      <aside className="hidden lg:flex w-[260px] shrink-0 flex-col bg-[#0f172a] border-r border-white/5">
+      <aside className="hidden lg:flex w-[260px] shrink-0 flex-col bg-[#0c1221] border-r border-white/5 relative">
+        <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-indigo-500/40 to-transparent" />
         <SidebarContent displayName={displayName} initials={initials} />
       </aside>
 
       {/* ── Mobile: fixed top bar ── */}
-      <div className="lg:hidden fixed top-0 left-0 right-0 z-40 h-14 bg-[#0f172a] border-b border-white/5 flex items-center gap-3 px-4">
+      <div className="lg:hidden fixed top-0 left-0 right-0 z-40 h-14 bg-[#0c1221] border-b border-white/5 flex items-center gap-3 px-4">
         <button
           onClick={() => setOpen(true)}
           className="w-8 h-8 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 flex items-center justify-center transition shrink-0"
@@ -106,7 +107,7 @@ export default function SidebarShell({ displayName, initials }: Props) {
             onClick={() => setOpen(false)}
           />
           {/* Drawer */}
-          <aside className="relative w-[260px] h-full flex flex-col bg-[#0f172a] border-r border-white/5 z-10 shadow-2xl animate-in slide-in-from-left duration-200">
+          <aside className="relative w-[260px] h-full flex flex-col bg-[#0c1221] border-r border-white/5 z-10 shadow-2xl animate-in slide-in-from-left duration-200">
             {/* Close button */}
             <div className="absolute top-4 right-4">
               <button

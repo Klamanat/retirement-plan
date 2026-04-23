@@ -64,15 +64,15 @@ export default function SidebarNav({ onNavigate }: { onNavigate?: () => void }) 
             className={`
               flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium group relative
               ${active
-                ? "bg-white/10 text-white"
-                : "text-slate-400 hover:text-white hover:bg-white/5"
+                ? "bg-gradient-to-r from-indigo-500/25 to-violet-500/10 text-white ring-1 ring-inset ring-white/10"
+                : "text-slate-400 hover:text-slate-100 hover:bg-white/7"
               }
             `}
           >
             {active && (
-              <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 bg-indigo-400 rounded-r-full" />
+              <span className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 bg-gradient-to-b from-indigo-400 to-violet-500 rounded-r-full" />
             )}
-            <span className={`shrink-0 ${active ? "text-indigo-300" : "text-slate-500 group-hover:text-slate-300"}`}>
+            <span className={`shrink-0 ${active ? "text-indigo-300" : "text-slate-500 group-hover:text-slate-300 transition-colors"}`}>
               {icon}
             </span>
             <span className="truncate">{label}</span>

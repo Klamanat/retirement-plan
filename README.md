@@ -1,36 +1,87 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# My Plan — แผนเกษียณ & ท่องเที่ยว
 
-## Getting Started
+แอปวางแผนชีวิตครบวงจร สำหรับคนที่อยากจัดการ **แผนเกษียณ** และ **ทริปท่องเที่ยว** ในที่เดียว
 
-First, run the development server:
+## ฟีเจอร์
+
+- **แผนเกษียณ** — คำนวณยอดเงินที่ต้องมีตอนเกษียณ พร้อม slider ปรับค่าแบบ real-time
+- **แผนเดินทาง** — จัดการทริป งบประมาณ และสถานะ (วางแผน / จองแล้ว / เสร็จแล้ว)
+- **แผนที่** — ปักหมุดสถานที่บน interactive map พร้อมค้นหาผ่าน Nominatim
+- **งบประมาณ** — บันทึกรายรับ-รายจ่ายรายเดือน พร้อมกราฟ bar chart
+
+## Tech Stack
+
+| Layer | Technology |
+|-------|-----------|
+| Framework | Next.js 16 (App Router) |
+| UI | React 19, Tailwind CSS v4 |
+| Font | Inter (self-hosted via `next/font`) |
+| Auth | NextAuth.js v5 (Credentials) |
+| Database | SQLite (LibSQL) + Prisma ORM v7 |
+| Charts | Recharts |
+| Maps | React Leaflet + OpenStreetMap |
+
+## เริ่มต้นใช้งาน
+
+### 1. ติดตั้ง dependencies
+
+```bash
+npm install
+```
+
+### 2. ตั้งค่า environment variables
+
+สร้างไฟล์ `.env.local`:
+
+```env
+DATABASE_URL="file:./dev.db"
+AUTH_SECRET="your-secret-key"
+```
+
+### 3. สร้าง database
+
+```bash
+npx prisma migrate dev
+```
+
+### 4. รัน development server
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+เปิด [http://localhost:3000](http://localhost:3000) ในเบราว์เซอร์
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## โครงสร้างโปรเจค
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```
+app/
+├── (auth)/
+│   ├── login/          # หน้าเข้าสู่ระบบ
+│   └── register/       # หน้าสมัครสมาชิก
+├── (dashboard)/
+│   ├── dashboard/      # ภาพรวม
+│   ├── retirement/     # แผนเกษียณ
+│   ├── trips/          # แผนเดินทาง
+│   └── map/            # แผนที่
+└── api/                # API routes
 
-## Learn More
+components/
+├── SidebarShell.tsx    # Sidebar layout
+├── SidebarNav.tsx      # Navigation links
+├── MapClient.tsx       # Interactive map
+├── YearlyChart.tsx     # Budget bar chart
+└── PinModal.tsx        # Modal เพิ่มหมุด
 
-To learn more about Next.js, take a look at the following resources:
+prisma/
+└── schema.prisma       # Database schema
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Scripts
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```bash
+npm run dev      # Development server
+npm run build    # Production build
+npm run start    # Production server
+npm run lint     # ESLint
+```

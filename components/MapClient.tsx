@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback, useRef } from "react";
+import { useEffect, useState, useCallback, useRef, memo } from "react";
 import { MapContainer, TileLayer, Marker, Popup, useMapEvents, useMap } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
@@ -45,16 +45,16 @@ interface FlyTarget {
 
 // ── inner components ──────────────────────────────────────────────────────────
 
-function ClickHandler({ onMapClick }: { onMapClick: (lat: number, lng: number) => void }) {
+const ClickHandler = memo(function ClickHandler({ onMapClick }: { onMapClick: (lat: number, lng: number) => void }) {
   useMapEvents({
     click(e) {
       onMapClick(e.latlng.lat, e.latlng.lng);
     },
   });
   return null;
-}
+});
 
-function MapController({ target }: { target: FlyTarget | null }) {
+const MapController = memo(function MapController({ target }: { target: FlyTarget | null }) {
   const map = useMap();
   const prevTarget = useRef<FlyTarget | null>(null);
   useEffect(() => {
@@ -64,7 +64,7 @@ function MapController({ target }: { target: FlyTarget | null }) {
     }
   }, [target, map]);
   return null;
-}
+});
 
 // ── main component ────────────────────────────────────────────────────────────
 
@@ -80,6 +80,7 @@ export default function MapClient() {
   const [showResults, setShowResults] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const abortRef = useRef<AbortController | null>(null);
 
   // current position
   const [currentPos, setCurrentPos] = useState<{ lat: number; lng: number } | null>(null);
@@ -110,17 +111,20 @@ export default function MapClient() {
     if (debounceRef.current) clearTimeout(debounceRef.current);
     if (!value.trim()) { setResults([]); setShowResults(false); return; }
     debounceRef.current = setTimeout(async () => {
+      // Cancel any in-flight request before starting a new one
+      abortRef.current?.abort();
+      abortRef.current = new AbortController();
       setSearching(true);
       try {
         const res = await fetch(
           `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(value)}&format=json&limit=6&addressdetails=0`,
-          { headers: { "Accept-Language": "th,en" } }
+          { headers: { "Accept-Language": "th,en" }, signal: abortRef.current.signal }
         );
         const data: NominatimResult[] = await res.json();
         setResults(data);
         setShowResults(true);
-      } catch {
-        setResults([]);
+      } catch (e) {
+        if (!(e instanceof DOMException && e.name === "AbortError")) setResults([]);
       } finally {
         setSearching(false);
       }
